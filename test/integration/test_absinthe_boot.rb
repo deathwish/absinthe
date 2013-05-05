@@ -10,7 +10,7 @@ class TestAbsintheBoot < Test::Unit::TestCase
     Absinthe.boot!(__FILE__) { |ctx|
       ctx.const :foo, :bar
     }
-    assert_equal :bar, Absinthe::Distillery.root_context[:foo]
+    assert_equal :bar, Absinthe.root_context[:foo]
   end
 
   def test_calls_the_block_in_the_given_scope

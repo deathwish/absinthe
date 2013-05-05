@@ -1,8 +1,8 @@
 module Absinthe
   module Distillery
     class Context
-      def initialize
-        @injector = Injector.new
+      def initialize injector
+        @injector = injector
         register :context, self
       end
 
