@@ -2,9 +2,9 @@ module Absinthe::Distillery
   class PluginNotFound < Exception; end
 
   class SourceLoader
-    def boot! ctx
-      if ctx[:app_root]
-        $LOAD_PATH.unshift(File.expand_path(File.join(ctx[:app_root], 'lib')))
+    def initialize app_root
+      if app_root
+        $LOAD_PATH.unshift(File.expand_path(File.join(app_root, 'lib')))
       end
 
       @plugin_paths = []

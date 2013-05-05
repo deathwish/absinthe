@@ -8,5 +8,9 @@ module Absinthe
         boot!
       end
     end
+
+    def halt!
+      Distillery.root_context.halt!
+    end
   end
 end

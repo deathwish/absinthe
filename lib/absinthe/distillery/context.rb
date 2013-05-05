@@ -1,46 +1,53 @@
 module Absinthe
   module Distillery
-    class RootNamespace
-      class LoadFailed < Exception; end
-
-      attr_reader :root, :main
-      def initialize main_object
-        @main = main_object
-        @plugins = []
+    class Plugin
+      def initialize context, namespace
+        @context, @namespace = context, namespace
       end
 
-      def boot! ctx
-        @context = ctx
-        @root = Module.new { extend self }
-
-        # Import ourselves into the new namespace, and remove ourselves from main.
-        @root.const_set :Absinthe, ::Absinthe
-        Object.send :remove_const, :Absinthe
-
-        root.send(:define_method, :context) { ctx }
-        main.include root
-        (ctx[:calling_context] || main).instance_eval { 
-          ctx[:boot_proc].call ctx if ctx[:boot_proc]
-        }
-      end
-
-      def load_plugin name
-        require_dir :plugins, name
+      def load name
+        @namespace.require_dir :plugins, name
 
         # HACK not like this!
         plugin_name = Absinthe::Plugins.constants.grep(/#{name.to_s.gsub('_', '')}/i).first
         plugin = Absinthe::Plugins.const_get plugin_name
-        plugin
+        plugin.register @context if plugin.respond_to? :register
+        @context[name] # eager load.
+      end
+    end
+
+    class RootNamespace
+      class LoadFailed < Exception; end
+
+      attr_reader :root, :main
+      def initialize context, main
+        @context = context
+        @main = main
+        @root = Module.new { extend self }
+        @root.send(:define_method, :context) { context }
+        main.include root
+      end
+
+      def boot!
+        # Import ourselves into the new namespace, and remove ourselves from main.
+        @root.const_set :Absinthe, ::Absinthe
+        Object.send :remove_const, :Absinthe
+      end
+
+      def halt!
+        # restore ourselves to the global namespace
+        absinthe = @root.const_get :Absinthe
+        Object.send :const_set, :Absinthe, absinthe
       end
 
       def require_dir root, *paths
         @context[:source_loader].source_files(root, paths) do |file|
-          eval_in_scope file
+          load_file file
         end
       end
 
       private
-      def eval_in_scope file
+      def load_file file
         begin
           @root.send(:module_eval, file.read, file.path, 1)
         rescue Exception => ex
@@ -50,30 +57,10 @@ module Absinthe
       end
     end
 
-    class Context
-      module Dsl
-        def configure &block
-          self.instance_eval &block
-        end
-
-        def const name, value
-          register name, value
-        end
-
-        def [] name, *args
-          inject name, *args
-        end
-      end
-      include Dsl
-
-      attr_reader :parameters, :args
+    class Injector
       def initialize
         @parameters = { }
         @args = { }
-      end
-
-      def boot!
-        inject(:namespace).boot! self
       end
 
       def register name, clazz, *args
@@ -81,31 +68,51 @@ module Absinthe
         @args[name] = args if @parameters[name].is_a?(Class)
       end
 
-      def inject name, *args
+      def inject name
         return @parameters[name] unless @parameters[name].is_a?(Class)
-        injections = (@args[name] + args).map do |injection|
+        injections = @args[name].map do |injection|
           injection.is_a?(Symbol) ? inject(injection) : injection
         end
-        @parameters[name].new(*injections).tap do |obj|
-          if obj.respond_to?(:boot!)
-            # anything responding to boot is treated as a singleton service.
-            @parameters[name] = obj
-            case obj.method(:boot!).arity
-            when 0
-              obj.boot!
-            when 1
-              obj.boot! self
-            else
-              raise "Invalid boot method for #{name}"
-            end
-          end
-        end
+        @parameters[name] = @parameters[name].new(*injections)
+      end
+    end
+
+    class Context
+      def initialize
+        @injector = Injector.new
+        register :context, self
+      end
+
+      def configure &block
+        self.instance_eval &block
+      end
+
+      def const name, value
+        @injector.register name, value
+      end
+
+      def register name, clazz, *args
+        @injector.register name, clazz, *args
+      end
+
+      def [] name, *args
+        @injector.inject name, *args
       end
 
       def plugin! name
-        plugin = inject(:namespace).load_plugin name
-        plugin.register self if plugin.respond_to? :register
-        inject name
+        self[:plugin].load name
+      end
+
+      def boot!
+        self[:namespace].boot!
+        if self[:boot_proc]
+          boot_scope = (self[:calling_context] || self[:main_object])
+          boot_scope.instance_exec(self, &self[:boot_proc])
+        end
+      end
+
+      def halt!
+        self[:namespace].halt!
       end
     end
   end

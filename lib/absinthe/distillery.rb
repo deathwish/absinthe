@@ -12,8 +12,10 @@ module Absinthe
       def initialize main_object
         raise "Warehouse init failure!" if main_object.nil?
         @root_context = Context.new
-        root_context.register :namespace, RootNamespace.new(main_object)
-        root_context.register :source_loader, SourceLoader
+        @root_context.register :main_object, main_object
+        @root_context.register :namespace, RootNamespace, :context, :main_object
+        @root_context.register :source_loader, SourceLoader, :app_root
+        @root_context.register :plugin, Plugin, :context, :namespace
       end
     end
 
