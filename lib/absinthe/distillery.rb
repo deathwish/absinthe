@@ -5,6 +5,9 @@ module Absinthe
 
   module Distillery
     require 'distillery/context'
+    require 'distillery/injector'
+    require 'distillery/root_namespace'
+    require 'distillery/plugin'
     require 'distillery/source_loader'
 
     class Warehouse
