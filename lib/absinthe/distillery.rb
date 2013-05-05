@@ -14,8 +14,8 @@ module Absinthe
         @root_context = Context.new
         @root_context.register :main_object, main_object
         @root_context.register :namespace, RootNamespace, :context, :main_object
-        @root_context.register :source_loader, SourceLoader, :app_root
-        @root_context.register :plugin, Plugin, :context, :namespace
+        @root_context.register :source_loader, SourceLoader, :app_root, :namespace
+        @root_context.register :plugin, Plugin, :context, :source_loader
       end
     end
 

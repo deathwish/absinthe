@@ -1,18 +1,17 @@
 module Absinthe
   module Distillery
     class Plugin
-      def initialize context, namespace
-        @context, @namespace = context, namespace
+      def initialize context, source_loader
+        @context, @source_loader = context, source_loader
       end
 
       def load name
-        @namespace.require_dir :plugins, name
+        @source_loader.require_dir :plugins, name
 
         # HACK not like this!
         plugin_name = Absinthe::Plugins.constants.grep(/#{name.to_s.gsub('_', '')}/i).first
         plugin = Absinthe::Plugins.const_get plugin_name
         plugin.register @context if plugin.respond_to? :register
-        @context[name] # eager load.
       end
     end
 
@@ -40,13 +39,6 @@ module Absinthe
         Object.send :const_set, :Absinthe, absinthe
       end
 
-      def require_dir root, *paths
-        @context[:source_loader].source_files(root, paths) do |file|
-          load_file file
-        end
-      end
-
-      private
       def load_file file
         begin
           @root.send(:module_eval, file.read, file.path, 1)

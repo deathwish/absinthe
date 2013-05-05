@@ -2,7 +2,8 @@ module Absinthe::Distillery
   class PluginNotFound < Exception; end
 
   class SourceLoader
-    def initialize app_root
+    def initialize app_root, namespace
+      @namespace = namespace
       if app_root
         $LOAD_PATH.unshift(File.expand_path(File.join(app_root, 'lib')))
       end
@@ -16,6 +17,13 @@ module Absinthe::Distillery
       end
     end
 
+    def require_dir root, *paths
+      source_files(root, paths) do |file|
+        @namespace.load_file file
+      end
+    end
+
+    private
     def source_files root, paths
       # TODO validate the root param
       sources = []

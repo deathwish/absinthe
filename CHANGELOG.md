@@ -4,6 +4,7 @@ Breaking changes, bugfixes, and new features for each release are summarized her
 For full details, please consult the SCM changelog.
 
 ## HEAD
+ * Breaking change: Moved require_dir from :namespace to :source_loader.
  * Add the beginnings of a test suite.
  * Add supporting documents to gem build.
 
