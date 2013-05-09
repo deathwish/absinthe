@@ -1,9 +1,12 @@
 module Absinthe
-  module Distillery
+  module Plugins
     class Context
+      def self.register injector
+        injector.register :context, Context, :injector
+      end
+
       def initialize injector
         @injector = injector
-        register :context, self
       end
 
       def configure &block
@@ -27,15 +30,11 @@ module Absinthe
       end
 
       def boot!
-        self[:namespace].boot!
+        self[:namespace].register :context, self
         if self[:boot_proc]
           boot_scope = (self[:calling_context] || self[:main_object])
           boot_scope.instance_exec(self, &self[:boot_proc])
         end
-      end
-
-      def halt!
-        self[:namespace].halt!
       end
     end
   end

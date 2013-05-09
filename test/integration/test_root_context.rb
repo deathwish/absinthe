@@ -4,7 +4,12 @@ require 'absinthe'
 TOPLEVEL = self
 class TestRootContext < Test::Unit::TestCase
   def setup
+    Absinthe.boot! __FILE__
     @root_context = Absinthe.root_context
+  end
+
+  def teardown
+    Absinthe.halt!
   end
 
   def test_root_context_is_cached

@@ -18,38 +18,44 @@ module Absinthe::Distillery
     end
 
     def require_dir root, *paths
-      source_files(root, paths) do |file|
-        @namespace.load_file file
-      end
-    end
-
-    private
-    def source_files root, paths
       # TODO validate the root param
-      sources = []
-
       # TODO this is a mess
       paths.each do |path|
         plugin_sources = []
         @plugin_paths.each do |plugin_path|
           target = File.join plugin_path, "#{path}.rb"
-          if File.file? target
-            file = File.new target
-            plugin_sources << file
+          next unless File.file? target
 
-            support_dir = File.join plugin_path, path.to_s
-            if File.directory? support_dir
-              $LOAD_PATH.unshift support_dir
-            end
+          support_dir = File.join plugin_path, path.to_s
 
-            yield file
-            $LOAD_PATH.delete support_dir
+          with_hooked_require(support_dir) do
+            plugin_sources << target
+            @namespace.load_file File.new(target)
           end
         end
+
         if plugin_sources.empty?
           raise PluginNotFound, "No plugin named #{path} was found in #{@plugin_paths.join ', '}"
         end
       end
+    end
+
+    private
+    def with_hooked_require support_dir
+      original_require = ::Kernel.method(:require)
+      namespace = @namespace
+      ::Kernel.send(:define_method, :require) do |filename|
+        target = File.join support_dir, "#{filename}.rb"
+        if File.file? target
+          namespace.load_file File.new(target)
+        else
+          original_require.call filename
+        end
+      end
+
+      yield
+    ensure
+      ::Kernel.send(:define_method, :require, &original_require)
     end
   end
 end

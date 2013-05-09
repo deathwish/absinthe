@@ -4,6 +4,7 @@ module Absinthe
       def initialize
         @parameters = { }
         @args = { }
+        register :injector, self
       end
 
       def register name, clazz, *args

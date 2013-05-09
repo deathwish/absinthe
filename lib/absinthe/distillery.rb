@@ -1,6 +1,4 @@
 module Absinthe
-  module Plugins; end
-
   class Exception < ::Exception; end
 
   module Distillery
@@ -12,9 +10,9 @@ module Absinthe
     def self.injector
       Injector.new.tap do |injector|
         injector.register :main_object, @main_object
-        injector.register :namespace, RootNamespace, :context, :main_object
+        injector.register :namespace, RootNamespace, :main_object
         injector.register :source_loader, SourceLoader, :app_root, :namespace
-        injector.register :plugin, Plugin, :context, :source_loader
+        injector.register :plugin, Plugin, :injector, :namespace, :source_loader
       end
     end
 

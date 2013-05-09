@@ -5,6 +5,8 @@ For full details, please consult the SCM changelog.
 
 ## HEAD
  * Breaking change: Moved require_dir from :namespace to :source_loader.
+ * Breaking change: Plugins are now loaded into the injected module.
+   This will break any load path manipulation or lazy require usage.
  * Add the beginnings of a test suite.
  * Add supporting documents to gem build.
 
