@@ -1,5 +1,4 @@
 module Absinthe
-  class NotInitialized < Exception; end
   $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'absinthe')))
   require 'distillery'
 
@@ -9,18 +8,12 @@ module Absinthe
     injector.register :calling_context, calling_context
     injector.register :boot_proc, block
     injector.inject(:plugin).load :context
-    @root_context = injector.inject :context
-    @root_context.boot!
+    injector.inject(:context).tap do |context|
+      context.boot!
+    end
   end
 
   def halt!
-    @root_context = nil
   end
-
-  def root_context
-    raise NotInitialized, "You must call Absinthe.boot! before retrieving the root context!" if @root_context.nil?
-    @root_context
-  end
-
   extend self
 end

@@ -2,15 +2,11 @@ require 'test/unit'
 require 'absinthe'
 
 class TestAbsintheBoot < Test::Unit::TestCase
-  def teardown
-    Absinthe.halt!
-  end
-
-  def test_registers_constants_on_the_root_context
-    Absinthe.boot!(__FILE__) { |ctx|
+  def test_registers_constants_on_the_returned_context
+    context = Absinthe.boot!(__FILE__) { |ctx|
       ctx.const :foo, :bar
     }
-    assert_equal :bar, Absinthe.root_context[:foo]
+    assert_equal :bar, context[:foo]
   end
 
   def test_calls_the_block_in_the_given_scope
