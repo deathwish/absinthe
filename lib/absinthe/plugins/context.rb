@@ -7,6 +7,7 @@ module Absinthe
 
       def initialize injector
         @injector = injector
+        @run_blocks = []
       end
 
       def configure &block
@@ -21,19 +22,34 @@ module Absinthe
         @injector.register name, clazz, *args
       end
 
-      def [] name, *args
-        @injector.inject name, *args
+      def inject name
+        @injector.inject name
+      end
+
+      def [] name
+        inject name
       end
 
       def plugin! name
         self[:plugin].load name
       end
 
+      def run *args, &block
+        @run_blocks << {
+          :args => args,
+          :block => block
+        }
+      end
+
       def boot!
         self[:namespace].register :context, self
         if self[:boot_proc]
+          instance_exec(&self[:boot_proc])
           boot_scope = (self[:calling_context] || self[:main_object])
-          boot_scope.instance_exec(self, &self[:boot_proc])
+          @run_blocks.each do |run|
+            injections = run[:args].map(&method(:inject))
+            boot_scope.instance_exec(*injections, &run[:block])
+          end
         end
       end
     end

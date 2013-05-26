@@ -7,6 +7,10 @@ For full details, please consult the SCM changelog.
  * Breaking change: Moved require_dir from :namespace to :source_loader.
  * Breaking change: Plugins are now loaded into the injected module.
    This will break any load path manipulation or lazy require usage.
+ * Breaking change: The block passed to boot is now evaluated directly
+   against the context, rather then the provided object or main.
+ * Add support for registering run blocks which will run against the
+   provided object or main.
  * Add the beginnings of a test suite.
  * Add supporting documents to gem build.
 
