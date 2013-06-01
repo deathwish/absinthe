@@ -8,6 +8,8 @@ module Absinthe
       def initialize injector
         @injector = injector
         @run_blocks = []
+        self[:namespace].register :context, self
+        instance_exec(&self[:boot_proc]) if self[:boot_proc]
       end
 
       def configure &block
@@ -42,14 +44,10 @@ module Absinthe
       end
 
       def boot!
-        self[:namespace].register :context, self
-        if self[:boot_proc]
-          instance_exec(&self[:boot_proc])
-          boot_scope = (self[:calling_context] || self[:main_object])
-          @run_blocks.each do |run|
-            injections = run[:args].map(&method(:inject))
-            boot_scope.instance_exec(*injections, &run[:block])
-          end
+        boot_scope = (self[:calling_context] || self[:main_object])
+        @run_blocks.each do |run|
+          injections = run[:args].map(&method(:inject))
+          boot_scope.instance_exec(*injections, &run[:block])
         end
       end
     end

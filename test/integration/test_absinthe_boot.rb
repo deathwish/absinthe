@@ -1,5 +1,4 @@
-require 'test/unit'
-require 'absinthe'
+require 'test_helper'
 
 class TestAbsintheBoot < Test::Unit::TestCase
   def test_registers_constants_on_the_returned_context

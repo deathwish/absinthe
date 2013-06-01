@@ -7,13 +7,12 @@ module Absinthe
     injector.register :app_root, File.expand_path(File.dirname(boot_file))
     injector.register :calling_context, calling_context
     injector.register :boot_proc, block
-    injector.inject(:plugin).load :context
-    injector.inject(:context).tap do |context|
-      context.boot!
+    injector.inject(:plugin).tap do |plugin|
+      plugin.load :context
+      plugin.boot!
     end
+    injector.inject(:context)
   end
 
-  def halt!
-  end
   extend self
 end

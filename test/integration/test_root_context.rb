@@ -1,5 +1,4 @@
-require 'test/unit'
-require 'absinthe'
+require 'test_helper'
 
 TOPLEVEL = self
 class TestRootContext < Test::Unit::TestCase

@@ -1,15 +1,21 @@
 module Absinthe
   module Distillery
     class Injector
+      attr_reader :service_names
+
       def initialize
         @parameters = { }
         @args = { }
+        @service_names = []
         register :injector, self
       end
 
       def register name, clazz, *args
         @parameters[name] = clazz
-        @args[name] = args if @parameters[name].is_a?(Class)
+        if @parameters[name].is_a?(Class)
+          @args[name] = args
+          @service_names << name # we lack ordered hash traversal on 1.8.
+        end
       end
 
       def inject name

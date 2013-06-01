@@ -13,6 +13,10 @@ For full details, please consult the SCM changelog.
    provided object or main.
  * Add the beginnings of a test suite.
  * Add supporting documents to gem build.
+ * Add the plugin_injector plugin, which creates proxy classes
+   for all registered plugins on the root namespace. For example,
+   the context plugin instance will be available through the Context
+   class in the namespace.
 
 ## v0.0.2
  * Fixed gemspec.
