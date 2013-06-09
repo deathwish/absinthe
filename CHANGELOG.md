@@ -3,7 +3,7 @@
 Breaking changes, bugfixes, and new features for each release are summarized here.
 For full details, please consult the SCM changelog.
 
-## HEAD
+## v0.0.3
  * Breaking change: Moved require_dir from :namespace to :source_loader.
  * Breaking change: Plugins are now loaded into the injected module.
    This will break any load path manipulation or lazy require usage.
